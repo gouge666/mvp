@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器文件传输测试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        select, input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .file-list {
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .file-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .file-name.directory {
+            color: #667eea;
+        }
+        
+        .file-name.hidden {
+            opacity: 0.7;
+        }
+        
+        .file-details {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .file-type {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .file-type.directory {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+        
+        .file-type.file {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .file-type.link {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .path-breadcrumb {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-family: monospace;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 服务器文件传输测试工具</h1>
+        <p class="subtitle">Server103 - 文件列表查询与传输测试</p>
+        
+        <!-- 文件列表查询 -->
+        <div class="section">
+            <h2>📁 文件列表查询</h2>
+            <div class="form-group">
+                <label for="server-select">选择服务器:</label>
+                <select id="server-select">
+                    <option value="server101">Server101 (192.168.10.1)</option>
+                    <option value="server102">Server102 (192.168.10.2)</option>
+                    <option value="server103" selected>Server103 (192.168.10.3)</option>
+                    <option value="server104">Server104 (192.168.10.4)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="path-input">路径:</label>
+                <input type="text" id="path-input" value="/home/user" placeholder="例如: /home/user">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="listFiles()">查询文件列表</button>
+                <button class="btn-secondary" onclick="goToParent()">返回上级目录</button>
+            </div>
+            
+            <!-- 在当前路径创建新文件 -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="new-file-name">在当前路径创建新文件 - 文件名:</label>
+                <input type="text" id="new-file-name" placeholder="例如: new_file.txt">
+            </div>
+            <div class="form-group">
+                <label for="new-file-content">文件内容:</label>
+                <textarea id="new-file-content" placeholder="在这里输入文件内容（支持多行文本）"></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createFileInCurrentPath()">在当前路径创建文件</button>
+            </div>
+            <div class="loading" id="loading">加载中...</div>
+            <div class="result" id="result"></div>
+            <div class="path-breadcrumb" id="current-path" style="display:none;">当前路径: <span id="path-display"></span></div>
+            <div class="file-list" id="file-list"></div>
+        </div>
+
+        <!-- 用户初始化 -->
+        <div class="section">
+            <h2>👤 用户初始化（在四台服务器创建目录）</h2>
+            <div class="form-group">
+                <label for="init-username">用户名 (如: gousk):</label>
+                <input type="text" id="init-username" value="" placeholder="请输入用户名，如: gousk" required>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createUserOnAllServers()">创建用户基础目录</button>
+            </div>
+            <div class="result" id="init-user-result"></div>
+        </div>
+        
+        <!-- 文件传输测试 -->
+        <div class="section">
+            <h2>📤 文件传输测试</h2>
+            <div class="form-group">
+                <label for="transfer-username">用户名 (如: gousk):</label>
+                <input type="text" id="transfer-username" value="" placeholder="请输入用户名，如: gousk" required>
+            </div>
+            <div class="form-group">
+                <label for="transfer-project">项目名称:</label>
+                <input type="text" id="transfer-project" placeholder="项目名称">
+            </div>
+            <div class="form-group">
+                <label for="transfer-target">目标服务器:</label>
+                <select id="transfer-target">
+                    <option value="server101">Server101</option>
+                    <option value="server102">Server102</option>
+                    <option value="server103">Server103</option>
+                    <option value="server104">Server104</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="transferFolder()">开始传输</button>
+            </div>
+            <div class="result" id="transfer-result"></div>
+        </div>
+        
+        <!-- 虚拟环境管理 -->
+        <div class="section">
+            <h2>🐍 虚拟环境管理 (Server102)</h2>
+            <div class="form-group">
+                <label for="venv-username">用户名 (如: gousk):</label>
+                <input type="text" id="venv-username" value="" placeholder="请输入用户名，如: gousk" required>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="loadEnvs()">刷新环境列表</button>
+            </div>
+            <div class="result" id="venv-result"></div>
+            <div id="env-list" style="margin-top: 15px;"></div>
+            
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">创建新环境</h3>
+            <div class="form-group">
+                <label for="new-env-name">环境名称:</label>
+                <input type="text" id="new-env-name" placeholder="例如: myenv">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="createEnv()">创建环境</button>
+            </div>
+        </div>
+        
+        <!-- 算法执行 -->
+        <div class="section">
+            <h2>🚀 算法执行</h2>
+            <div class="form-group">
+                <label for="execute-username">用户名:</label>
+                <input type="text" id="execute-username" value="" placeholder="请输入用户名，如: gousk" required>
+            </div>
+            <div class="form-group">
+                <label for="execute-server">执行服务器:</label>
+                <select id="execute-server">
+                    <option value="server102" selected>Server102 (环境管理服务器)</option>
+                    <option value="server101">Server101</option>
+                    <option value="server103">Server103</option>
+                    <option value="server104">Server104</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="loadProjects()">刷新项目列表</button>
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="execute-project">选择项目:</label>
+                <select id="execute-project">
+                    <option value="">请先刷新项目列表</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="execute-env">选择虚拟环境 (必需):</label>
+                <select id="execute-env" required>
+                    <option value="">请先刷新环境列表</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="execute-command">执行命令:</label>
+                <input type="text" id="execute-command" placeholder="例如: python main.py 或 python train.py" style="font-family: monospace;" required>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="executeProject()">执行算法</button>
+                <button class="btn-secondary" onclick="clearExecuteOutput()">清空输出</button>
+            </div>
+            <div class="result" id="execute-result"></div>
+            <div id="execute-output" style="margin-top: 15px; padding: 15px; background: #1e1e1e; color: #d4d4d4; border-radius: 5px; font-family: 'Courier New', monospace; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; display: none;"></div>
+        </div>
+        
+        <!-- 网页终端 -->
+        <div class="section">
+            <h2>💻 网页终端</h2>
+            <div class="form-group">
+                <label for="terminal-env">选择环境（可选）:</label>
+                <select id="terminal-env">
+                    <option value="">不使用虚拟环境</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="terminal-command">命令:</label>
+                <input type="text" id="terminal-command" placeholder="例如: pip install -r requirements.txt --index-url http://localhost:8087/simple/ --trusted-host localhost" style="font-family: monospace;">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="executeCommand()">执行命令</button>
+                <button class="btn-secondary" onclick="clearTerminal()">清空输出</button>
+            </div>
+            <div id="terminal-output" style="margin-top: 15px; padding: 15px; background: #1e1e1e; color: #d4d4d4; border-radius: 5px; font-family: 'Courier New', monospace; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentPath = '/home/user';
+        let currentServer = 'server103';
+        
+        function showResult(elementId, message, isSuccess) {
+            const resultDiv = document.getElementById(elementId);
+            // 转义HTML特殊字符和换行符
+            const escapedMessage = String(message).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>').replace(/\r/g, '');
+            resultDiv.innerHTML = escapedMessage;
+            resultDiv.className = 'result ' + (isSuccess ? 'success' : 'error');
+            resultDiv.style.display = 'block';
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+        
+        async function listFiles() {
+            const server = document.getElementById('server-select').value;
+            const path = document.getElementById('path-input').value || '/home/user';
+            
+            currentPath = path;
+            currentServer = server;
+            
+            showLoading(true);
+            document.getElementById('file-list').innerHTML = '';
+            document.getElementById('result').style.display = 'none';
+            
+            try {
+                const response = await fetch('/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        server: server,
+                        path: path
+                    })
+                });
+                
+                const data = await response.json();
+                showLoading(false);
+                
+                if (data.success) {
+                    document.getElementById('current-path').style.display = 'block';
+                    document.getElementById('path-display').textContent = data.path;
+                    displayFiles(data.files);
+                    showResult('result', `成功查询到 ${data.count} 个文件/文件夹`, true);
+                } else {
+                    showResult('result', `错误: ${data.error}`, false);
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        function displayFiles(files) {
+            const fileListDiv = document.getElementById('file-list');
+            fileListDiv.innerHTML = '';
+            
+            if (files.length === 0) {
+                fileListDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">目录为空</div>';
+                return;
+            }
+            
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                
+                const fileName = document.createElement('div');
+                fileName.className = 'file-name ' + file.type + (file.is_hidden ? ' hidden' : '');
+                fileName.textContent = file.name;
+                if (file.type === 'directory') {
+                    fileName.style.cursor = 'pointer';
+                    fileName.onclick = () => {
+                        document.getElementById('path-input').value = file.full_path;
+                        listFiles();
+                    };
+                }
+                
+                const fileDetails = document.createElement('div');
+                fileDetails.className = 'file-details';
+                fileDetails.textContent = `${file.permissions} | ${file.owner}:${file.group} | ${file.size} | ${file.date}`;
+                
+                fileInfo.appendChild(fileName);
+                fileInfo.appendChild(fileDetails);
+                
+                const fileType = document.createElement('div');
+                fileType.className = 'file-type ' + file.type;
+                fileType.textContent = file.type === 'directory' ? '📁 目录' : (file.type === 'link' ? '🔗 链接' : '📄 文件');
+                
+                fileItem.appendChild(fileInfo);
+                fileItem.appendChild(fileType);
+                fileListDiv.appendChild(fileItem);
+            });
+        }
+        
+        function goToParent() {
+            const path = currentPath;
+            const parentPath = path.split('/').slice(0, -1).join('/') || '/';
+            document.getElementById('path-input').value = parentPath;
+            listFiles();
+        }
+        
+        // 在当前路径创建文件
+        async function createFileInCurrentPath() {
+            const server = document.getElementById('server-select').value;
+            const path = document.getElementById('path-input').value || '/home/user';
+            const filename = document.getElementById('new-file-name').value.trim();
+            const content = document.getElementById('new-file-content').value;
+
+            if (!filename) {
+                showResult('result', '请输入文件名', false);
+                return;
+            }
+
+            showResult('result', '正在创建文件，请稍候...', true);
+
+            try {
+                const response = await fetch('/file/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        server: server,
+                        path: path,
+                        filename: filename,
+                        content: content
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('result', `✅ ${data.message}`, true);
+                    // 创建成功后刷新文件列表
+                    listFiles();
+                } else {
+                    showResult('result', `❌ ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult('result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        async function transferFolder() {
+            const username = document.getElementById('transfer-username').value.trim();
+            const projectname = document.getElementById('transfer-project').value.trim();
+            const targetServer = document.getElementById('transfer-target').value;
+            
+            if (!username) {
+                showResult('transfer-result', '请输入用户名', false);
+                return;
+            }
+            
+            if (!projectname) {
+                showResult('transfer-result', '请输入项目名称', false);
+                return;
+            }
+            
+            showResult('transfer-result', '传输中，请稍候...', true);
+            
+            try {
+                const response = await fetch('/transfer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        projectname: projectname,
+                        target_server: targetServer
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('transfer-result', `✅ ${data.message}`, true);
+                } else {
+                    showResult('transfer-result', `❌ ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult('transfer-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        // 虚拟环境管理
+        async function loadEnvs() {
+            const username = document.getElementById('venv-username').value.trim();
+            
+            if (!username) {
+                showResult('venv-result', '请输入用户名', false);
+                document.getElementById('env-list').innerHTML = '';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/env/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayEnvs(data.envs);
+                    updateTerminalEnvSelect(data.envs);
+                    showResult('venv-result', `找到 ${data.count} 个环境`, true);
+                } else {
+                    showResult('venv-result', `错误: ${data.error}`, false);
+                    document.getElementById('env-list').innerHTML = '';
+                }
+            } catch (error) {
+                showResult('venv-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        function displayEnvs(envs) {
+            const envListDiv = document.getElementById('env-list');
+            
+            if (envs.length === 0) {
+                envListDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">暂无虚拟环境</div>';
+                return;
+            }
+            
+            let html = '<div style="display: grid; gap: 10px;">';
+            envs.forEach(env => {
+                html += `
+                    <div style="padding: 15px; background: white; border-radius: 5px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #333; margin-bottom: 5px;">${env.name}</div>
+                            <div style="font-size: 12px; color: #666; font-family: monospace;">${env.path}</div>
+                        </div>
+                        <button onclick="deleteEnv('${env.name}')" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">删除</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            envListDiv.innerHTML = html;
+        }
+        
+        function updateTerminalEnvSelect(envs) {
+            const select = document.getElementById('terminal-env');
+            // 保留"不使用虚拟环境"选项
+            select.innerHTML = '<option value="">不使用虚拟环境</option>';
+            envs.forEach(env => {
+                const option = document.createElement('option');
+                option.value = env.name;
+                option.textContent = env.name;
+                select.appendChild(option);
+            });
+            
+            // 同时更新算法执行的环境选择
+            updateExecuteEnvSelect(envs);
+        }
+        
+        function updateExecuteEnvSelect(envs) {
+            const select = document.getElementById('execute-env');
+            select.innerHTML = '<option value="">请选择虚拟环境</option>';
+            envs.forEach(env => {
+                const option = document.createElement('option');
+                option.value = env.name;
+                option.textContent = env.name;
+                select.appendChild(option);
+            });
+        }
+        
+        async function createEnv() {
+            const envName = document.getElementById('new-env-name').value.trim();
+            const username = document.getElementById('venv-username').value.trim();
+            
+            if (!username) {
+                showResult('venv-result', '请输入用户名', false);
+                return;
+            }
+            
+            if (!envName) {
+                showResult('venv-result', '请输入环境名称', false);
+                return;
+            }
+            
+            showResult('venv-result', '创建中，请稍候...', true);
+            
+            try {
+                const response = await fetch('/env/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        env_name: envName,
+                        username: username
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('venv-result', `✅ ${data.message}`, true);
+                    document.getElementById('new-env-name').value = '';
+                    loadEnvs(); // 刷新列表
+                } else {
+                    showResult('venv-result', `❌ ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult('venv-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        async function deleteEnv(envName) {
+            if (!confirm(`确定要删除环境 "${envName}" 吗？此操作不可恢复！`)) {
+                return;
+            }
+            
+            const username = document.getElementById('venv-username').value.trim();
+            
+            if (!username) {
+                showResult('venv-result', '请输入用户名', false);
+                return;
+            }
+            
+            try {
+                const response = await fetch('/env/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        env_name: envName,
+                        username: username
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('venv-result', `✅ ${data.message}`, true);
+                    loadEnvs(); // 刷新列表
+                } else {
+                    showResult('venv-result', `❌ ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult('venv-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        // 网页终端
+        async function executeCommand() {
+            const command = document.getElementById('terminal-command').value.trim();
+            const envName = document.getElementById('terminal-env').value;
+            const username = document.getElementById('venv-username').value.trim();
+            
+            if (!username) {
+                appendTerminalOutput('错误: 请输入用户名', 'error');
+                return;
+            }
+            
+            if (!command) {
+                appendTerminalOutput('请输入命令', 'error');
+                return;
+            }
+            
+            appendTerminalOutput(`$ ${command}${envName ? ` [环境: ${envName}]` : ''}`, 'command');
+            
+            try {
+                const response = await fetch('/env/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        command: command,
+                        env_name: envName || null,
+                        username: username
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.stdout) {
+                    appendTerminalOutput(data.stdout, 'stdout');
+                }
+                if (data.stderr) {
+                    appendTerminalOutput(data.stderr, 'stderr');
+                }
+                if (!data.success && !data.stdout && !data.stderr) {
+                    appendTerminalOutput(`错误: ${data.error || '命令执行失败'}`, 'error');
+                }
+            } catch (error) {
+                appendTerminalOutput(`请求失败: ${error.message}`, 'error');
+            }
+            
+            // 清空输入框
+            document.getElementById('terminal-command').value = '';
+        }
+        
+        function appendTerminalOutput(text, type) {
+            const outputDiv = document.getElementById('terminal-output');
+            const timestamp = new Date().toLocaleTimeString();
+            let className = '';
+            let prefix = '';
+            
+            switch(type) {
+                case 'command':
+                    className = 'color: #4ec9b0;';
+                    prefix = `[${timestamp}] `;
+                    break;
+                case 'stdout':
+                    className = 'color: #d4d4d4;';
+                    break;
+                case 'stderr':
+                    className = 'color: #f48771;';
+                    break;
+                case 'error':
+                    className = 'color: #f48771;';
+                    prefix = '[错误] ';
+                    break;
+            }
+            
+            // 转义HTML特殊字符和换行符
+            const escapedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>').replace(/\r/g, '');
+            outputDiv.innerHTML += `<div style="${className}">${prefix}${escapedText}</div>`;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        
+        function clearTerminal() {
+            document.getElementById('terminal-output').innerHTML = '';
+        }
+        
+        // 算法执行功能
+        async function loadProjects() {
+            const username = document.getElementById('execute-username').value.trim();
+            // 项目列表固定从 server101 查询（项目代码源服务器）
+            const server = 'server101';
+            
+            if (!username) {
+                showResult('execute-result', '请输入用户名', false);
+                document.getElementById('execute-project').innerHTML = '<option value="">请先输入用户名并刷新</option>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/project/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        server: server  // 固定使用 server101
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateProjectSelect(data.projects);
+                    showResult('execute-result', `找到 ${data.count} 个项目`, true);
+                } else {
+                    showResult('execute-result', `错误: ${data.error}`, false);
+                    document.getElementById('execute-project').innerHTML = '<option value="">无项目</option>';
+                }
+            } catch (error) {
+                showResult('execute-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        function updateProjectSelect(projects) {
+            const select = document.getElementById('execute-project');
+            select.innerHTML = '<option value="">请选择项目</option>';
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.name;
+                option.textContent = `${project.name}${project.has_requirements ? ' ✓' : ''}`;
+                select.appendChild(option);
+            });
+        }
+        
+        let eventSource = null;
+        let currentLogFile = null;
+        
+        async function executeProject() {
+            const username = document.getElementById('execute-username').value.trim();
+            const projectname = document.getElementById('execute-project').value;
+            const envName = document.getElementById('execute-env').value;
+            const command = document.getElementById('execute-command').value.trim();
+            const server = document.getElementById('execute-server').value;
+            
+            if (!username) {
+                showResult('execute-result', '请输入用户名', false);
+                return;
+            }
+            
+            if (!projectname) {
+                showResult('execute-result', '请选择项目', false);
+                return;
+            }
+            
+            if (!envName) {
+                showResult('execute-result', '请选择虚拟环境（必需）', false);
+                return;
+            }
+            
+            if (!command) {
+                showResult('execute-result', '请输入执行命令', false);
+                return;
+            }
+            
+            // 停止之前的轮询
+            if (window.executePollInterval) {
+                clearInterval(window.executePollInterval);
+                window.executePollInterval = null;
+            }
+            
+            const outputDiv = document.getElementById('execute-output');
+            outputDiv.style.display = 'block';
+            outputDiv.innerHTML = ''; // 清空之前的输出
+            appendExecuteOutput(`[${new Date().toLocaleTimeString()}] 开始执行算法...`, 'info');
+            appendExecuteOutput(`项目: ${projectname} | 环境: ${envName} | 命令: ${command}`, 'info');
+            showResult('execute-result', '执行中，实时日志输出...', true);
+            
+            // 启动执行并开始轮询日志
+            let logFile = null;
+            let lastLength = 0;
+            let pollCount = 0;
+            const maxPollCount = 3600; // 最多轮询1小时（3600次 * 1秒）
+            
+            fetch('/project/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    projectname: projectname,
+                    env_name: envName,
+                    command: command,
+                    server: server
+                })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.log_file) {
+                    logFile = data.log_file;
+                    currentLogFile = logFile;
+                    appendExecuteOutput(`日志文件: ${data.log_file}`, 'info');
+                    
+                    // 开始轮询log文件（实时显示日志）
+                    window.executePollInterval = setInterval(async () => {
+                        pollCount++;
+                        if (pollCount > maxPollCount) {
+                            clearInterval(window.executePollInterval);
+                            appendExecuteOutput('轮询超时，停止实时日志', 'error');
+                            return;
+                        }
+                        
+                        try {
+                            const logResponse = await fetch('/project/log', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    username: username,
+                                    projectname: projectname,
+                                    log_file: logFile
+                                })
+                            });
+                            
+                            const logData = await logResponse.json();
+                            if (logData.success && logData.content) {
+                                const content = logData.content;
+                                if (content.length > lastLength) {
+                                    const newContent = content.substring(lastLength);
+                                    const lines = newContent.split('\n');
+                                    lines.forEach(line => {
+                                        if (line.trim()) {
+                                            appendExecuteOutput(line, 'stdout');
+                                        }
+                                    });
+                                    lastLength = content.length;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('轮询日志失败:', error);
+                        }
+                    }, 1000); // 每秒轮询一次
+                    
+                    // 显示最终结果（延迟检查）
+                    setTimeout(() => {
+                        // 再次获取最终日志
+                        fetch('/project/log', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                username: username,
+                                projectname: projectname,
+                                log_file: logFile
+                            })
+                        }).then(response => response.json())
+                        .then(logData => {
+                            if (window.executePollInterval) {
+                                clearInterval(window.executePollInterval);
+                                window.executePollInterval = null;
+                            }
+                            
+                            if (data.success) {
+                                appendExecuteOutput(`[${new Date().toLocaleTimeString()}] ✅ 执行完成`, 'success');
+                                appendExecuteOutput(`日志已保存到: ${data.log_file}`, 'info');
+                                showResult('execute-result', '✅ 算法执行完成', true);
+                            } else {
+                                appendExecuteOutput(`[错误] ${data.error || '执行失败'}`, 'error');
+                                if (data.log_file) {
+                                    appendExecuteOutput(`日志已保存到: ${data.log_file}`, 'info');
+                                }
+                                showResult('execute-result', `❌ ${data.error || '执行失败'}`, false);
+                            }
+                        });
+                    }, 3000); // 3秒后检查最终结果
+                } else {
+                    // 没有log文件，使用普通输出
+                    executeProjectNormal(username, projectname, envName, command, server, data);
+                }
+            }).catch(error => {
+                appendExecuteOutput(`执行失败: ${error.message}`, 'error');
+                showResult('execute-result', `请求失败: ${error.message}`, false);
+            });
+        }
+        
+        // 普通执行模式（备用方案）
+        async function executeProjectNormal(username, projectname, envName, command, server) {
+            try {
+                const response = await fetch('/project/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        projectname: projectname,
+                        env_name: envName,
+                        command: command,
+                        server: server
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.stdout) {
+                    appendExecuteOutput(data.stdout, 'stdout');
+                }
+                if (data.stderr) {
+                    appendExecuteOutput(data.stderr, 'stderr');
+                }
+                
+                if (data.success) {
+                    showResult('execute-result', '✅ 算法执行完成', true);
+                    if (data.log_file) {
+                        appendExecuteOutput(`日志已保存到: ${data.log_file}`, 'info');
+                    }
+                } else {
+                    showResult('execute-result', `❌ 执行失败: ${data.error || '未知错误'}`, false);
+                    if (data.error) {
+                        appendExecuteOutput(`错误: ${data.error}`, 'error');
+                    }
+                }
+            } catch (error) {
+                showResult('execute-result', `请求失败: ${error.message}`, false);
+                appendExecuteOutput(`请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function appendExecuteOutput(text, type) {
+            const outputDiv = document.getElementById('execute-output');
+            const timestamp = new Date().toLocaleTimeString();
+            let className = '';
+            let prefix = '';
+            
+            switch(type) {
+                case 'info':
+                    className = 'color: #4ec9b0;';
+                    prefix = `[${timestamp}] `;
+                    break;
+                case 'stdout':
+                    className = 'color: #d4d4d4;';
+                    break;
+                case 'stderr':
+                    className = 'color: #f48771;';
+                    break;
+                case 'error':
+                    className = 'color: #f48771;';
+                    prefix = '[错误] ';
+                    break;
+                case 'success':
+                    className = 'color: #4ec9b0; font-weight: bold;';
+                    prefix = `[${timestamp}] `;
+                    break;
+            }
+            
+            // 转义HTML特殊字符和换行符
+            const escapedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>').replace(/\r/g, '');
+            outputDiv.innerHTML += `<div style="${className}">${prefix}${escapedText}</div>`;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        
+        function clearExecuteOutput() {
+            document.getElementById('execute-output').innerHTML = '';
+            document.getElementById('execute-output').style.display = 'none';
+        }
+        
+        // 当环境列表更新时，同步更新算法执行的环境选择
+        function updateExecuteEnvSelect(envs) {
+            const select = document.getElementById('execute-env');
+            select.innerHTML = '<option value="">请选择虚拟环境</option>';
+            envs.forEach(env => {
+                const option = document.createElement('option');
+                option.value = env.name;
+                option.textContent = env.name;
+                select.appendChild(option);
+            });
+        }
+        
+        
+        // 页面加载时自动查询当前服务器和环境列表
+        window.onload = function() {
+            listFiles();
+            loadEnvs();
+        };
+
+        // 用户初始化：在四台服务器上创建基础目录
+        async function createUserOnAllServers() {
+            const username = document.getElementById('init-username').value.trim();
+            if (!username) {
+                showResult('init-user-result', '请输入用户名', false);
+                return;
+            }
+
+            showResult('init-user-result', '正在创建用户目录，请稍候...', true);
+
+            try {
+                const response = await fetch('/user/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const details = data.details || {};
+                    const lines = [
+                        `✅ 用户 ${data.username} 目录创建完成：`,
+                        `- server101: ${details.server101 || '未知'}`,
+                        `- server102: ${details.server102 || '未知'}`,
+                        `- server103: ${details.server103 || '未知'}`,
+                        `- server104: ${details.server104 || '未知'}`
+                    ];
+                    showResult('init-user-result', lines.join('\n'), true);
+                } else {
+                    const details = data.details || {};
+                    const lines = [
+                        `❌ 创建用户目录时发生错误：${data.message || data.error || '未知错误'}`,
+                        `- server101: ${details.server101 || '未知'}`,
+                        `- server102: ${details.server102 || '未知'}`,
+                        `- server103: ${details.server103 || '未知'}`,
+                        `- server104: ${details.server104 || '未知'}`
+                    ];
+                    showResult('init-user-result', lines.join('\n'), false);
+                }
+            } catch (error) {
+                showResult('init-user-result', `请求失败: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html>
+
