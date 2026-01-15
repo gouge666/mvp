@@ -309,6 +309,48 @@
             <div class="result" id="transfer-result"></div>
         </div>
         
+        <!-- 多文件/目录传输 -->
+        <div class="section">
+            <h2>📦 多文件/目录传输</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                支持从任意服务器选择多个文件或目录，传输到任意服务器的指定目录。如果目标目录存在，会先清空其内容。
+            </p>
+            <div class="form-group">
+                <label for="multi-source-server">源服务器:</label>
+                <select id="multi-source-server">
+                    <option value="server101">Server101 (192.168.10.1)</option>
+                    <option value="server102">Server102 (192.168.10.2)</option>
+                    <option value="server103">Server103 (192.168.10.3)</option>
+                    <option value="server104">Server104 (192.168.10.4)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="multi-source-paths">源路径列表（每行一个路径，可以是文件或目录）:</label>
+                <textarea id="multi-source-paths" placeholder="/home/user/gousk/projects/project1&#10;/home/user/gousk/projects/file1.txt&#10;/home/user/gousk/projects/dir1" style="min-height: 120px; font-family: monospace;"></textarea>
+                <small style="color: #666; display: block; margin-top: 5px;">提示：每行输入一个完整路径，支持文件和目录混合</small>
+            </div>
+            <div class="form-group">
+                <label for="multi-target-server">目标服务器:</label>
+                <select id="multi-target-server">
+                    <option value="server101">Server101 (192.168.10.1)</option>
+                    <option value="server102">Server102 (192.168.10.2)</option>
+                    <option value="server103">Server103 (192.168.10.3)</option>
+                    <option value="server104">Server104 (192.168.10.4)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="multi-target-path">目标目录路径:</label>
+                <input type="text" id="multi-target-path" placeholder="/home/user/gousk/tasks" style="font-family: monospace;">
+                <small style="color: #666; display: block; margin-top: 5px;">提示：如果目录存在会先清空，不存在会自动创建</small>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="transferMultiple()">开始多文件传输</button>
+                <button class="btn-secondary" onclick="clearMultiTransferResult()">清空结果</button>
+            </div>
+            <div class="result" id="multi-transfer-result"></div>
+            <div id="multi-transfer-details" style="margin-top: 15px; display: none;"></div>
+        </div>
+        
         <!-- 虚拟环境管理 -->
         <div class="section">
             <h2>🐍 虚拟环境管理 (Server102)</h2>
@@ -369,6 +411,7 @@
             </div>
             <div class="button-group">
                 <button class="btn-primary" onclick="executeProject()">执行算法</button>
+                <button class="btn-primary" onclick="executeProjectBackground()" style="background: #28a745;">后台执行（返回PID）</button>
                 <button class="btn-secondary" onclick="clearExecuteOutput()">清空输出</button>
             </div>
             <div class="result" id="execute-result"></div>
@@ -393,6 +436,67 @@
                 <button class="btn-secondary" onclick="clearTerminal()">清空输出</button>
             </div>
             <div id="terminal-output" style="margin-top: 15px; padding: 15px; background: #1e1e1e; color: #d4d4d4; border-radius: 5px; font-family: 'Courier New', monospace; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;"></div>
+        </div>
+        
+        <!-- 任务检查与复制 -->
+        <div class="section">
+            <h2>📋 任务检查与复制</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                检查10.2服务器上的进程状态，如果已完成则检查并复制输出目录和日志文件到10.4服务器
+            </p>
+            <div class="form-group">
+                <label for="task-username">用户名:</label>
+                <input type="text" id="task-username" value="" placeholder="请输入用户名，如: gousk" required>
+            </div>
+            <div class="form-group">
+                <label for="task-pid">进程ID (PID):</label>
+                <input type="text" id="task-pid" placeholder="例如: 12345" required>
+            </div>
+            <div class="form-group">
+                <label for="task-projectname">算法项目名:</label>
+                <input type="text" id="task-projectname" placeholder="例如: myalgorithm" required>
+            </div>
+            <div class="form-group">
+                <label for="task-taskid">任务ID:</label>
+                <input type="text" id="task-taskid" placeholder="例如: task001" required>
+            </div>
+            <div class="form-group">
+                <label for="task-log-file">日志文件路径（可选，不提供则自动查找）:</label>
+                <input type="text" id="task-log-file" placeholder="例如: /tmp/myalgorithm_12345.log" style="font-family: monospace;">
+                <small style="color: #666; display: block; margin-top: 5px;">提示：如果不提供，系统会根据项目名和PID自动查找：/tmp/{项目名}_{PID}.log</small>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="checkTaskAndCopy()">检查并复制</button>
+                <button class="btn-secondary" onclick="clearTaskResult()">清空结果</button>
+            </div>
+            <div class="result" id="task-result"></div>
+        </div>
+        
+        <!-- 文件内容读取 -->
+        <div class="section">
+            <h2>📖 文件内容读取</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                读取指定服务器上的文件内容，以字符串形式返回
+            </p>
+            <div class="form-group">
+                <label for="read-server">选择服务器:</label>
+                <select id="read-server">
+                    <option value="server101">Server101 (192.168.10.1)</option>
+                    <option value="server102">Server102 (192.168.10.2)</option>
+                    <option value="server103" selected>Server103 (192.168.10.3)</option>
+                    <option value="server104">Server104 (192.168.10.4)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="read-file-path">文件路径:</label>
+                <input type="text" id="read-file-path" placeholder="例如: /home/user/test.txt" style="font-family: monospace;">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="readFileContent()">读取文件</button>
+                <button class="btn-secondary" onclick="clearFileContent()">清空内容</button>
+            </div>
+            <div class="result" id="read-file-result"></div>
+            <div id="file-content-display" style="margin-top: 15px; padding: 15px; background: #1e1e1e; color: #d4d4d4; border-radius: 5px; font-family: 'Courier New', monospace; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; display: none;"></div>
         </div>
     </div>
     
@@ -586,6 +690,114 @@
             } catch (error) {
                 showResult('transfer-result', `请求失败: ${error.message}`, false);
             }
+        }
+        
+        // 多文件/目录传输
+        async function transferMultiple() {
+            const sourceServer = document.getElementById('multi-source-server').value;
+            const sourcePathsText = document.getElementById('multi-source-paths').value.trim();
+            const targetServer = document.getElementById('multi-target-server').value;
+            const targetPath = document.getElementById('multi-target-path').value.trim();
+            
+            if (!sourcePathsText) {
+                showResult('multi-transfer-result', '请输入源路径列表', false);
+                return;
+            }
+            
+            if (!targetPath) {
+                showResult('multi-transfer-result', '请输入目标目录路径', false);
+                return;
+            }
+            
+            // 解析源路径列表（每行一个）
+            const sourcePaths = sourcePathsText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            if (sourcePaths.length === 0) {
+                showResult('multi-transfer-result', '源路径列表不能为空', false);
+                return;
+            }
+            
+            showResult('multi-transfer-result', `传输中，共 ${sourcePaths.length} 个文件/目录...`, true);
+            document.getElementById('multi-transfer-details').style.display = 'none';
+            document.getElementById('multi-transfer-details').innerHTML = '';
+            
+            try {
+                const response = await fetch('/transfer/multi', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        source_server: sourceServer,
+                        source_paths: sourcePaths,
+                        target_server: targetServer,
+                        target_path: targetPath
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('multi-transfer-result', `✅ ${data.message}`, true);
+                    displayMultiTransferDetails(data.details || []);
+                } else {
+                    showResult('multi-transfer-result', `❌ ${data.error}`, false);
+                    if (data.details && data.details.length > 0) {
+                        displayMultiTransferDetails(data.details);
+                    }
+                }
+            } catch (error) {
+                showResult('multi-transfer-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        function displayMultiTransferDetails(details) {
+            const detailsDiv = document.getElementById('multi-transfer-details');
+            detailsDiv.style.display = 'block';
+            
+            if (details.length === 0) {
+                detailsDiv.innerHTML = '<div style="padding: 15px; background: #f8f9fa; border-radius: 5px; color: #666;">暂无详细信息</div>';
+                return;
+            }
+            
+            let html = '<div style="margin-top: 15px;"><h3 style="margin-bottom: 10px; color: #667eea; font-size: 1.1em;">传输详情:</h3>';
+            html += '<div style="display: grid; gap: 10px;">';
+            
+            details.forEach((detail, index) => {
+                const statusIcon = detail.success ? '✅' : '❌';
+                const statusColor = detail.success ? '#28a745' : '#dc3545';
+                const bgColor = detail.success ? '#d4edda' : '#f8d7da';
+                
+                html += `
+                    <div style="padding: 15px; background: ${bgColor}; border-radius: 5px; border-left: 4px solid ${statusColor};">
+                        <div style="font-weight: 600; margin-bottom: 8px;">
+                            ${statusIcon} ${detail.type === 'directory' ? '📁 目录' : '📄 文件'} #${index + 1}
+                        </div>
+                        <div style="font-size: 13px; margin-bottom: 5px;">
+                            <strong>源路径:</strong> <span style="font-family: monospace; color: #333;">${detail.source}</span>
+                        </div>
+                        ${detail.target ? `
+                            <div style="font-size: 13px; margin-bottom: 5px;">
+                                <strong>目标路径:</strong> <span style="font-family: monospace; color: #333;">${detail.target}</span>
+                            </div>
+                        ` : ''}
+                        <div style="font-size: 13px; color: ${statusColor};">
+                            <strong>状态:</strong> ${detail.message}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            detailsDiv.innerHTML = html;
+        }
+        
+        function clearMultiTransferResult() {
+            document.getElementById('multi-transfer-result').style.display = 'none';
+            document.getElementById('multi-transfer-details').style.display = 'none';
+            document.getElementById('multi-transfer-details').innerHTML = '';
         }
         
         // 虚拟环境管理
@@ -1116,6 +1328,80 @@
             document.getElementById('execute-output').style.display = 'none';
         }
         
+        // 后台执行算法（返回进程ID）
+        async function executeProjectBackground() {
+            const username = document.getElementById('execute-username').value.trim();
+            const projectname = document.getElementById('execute-project').value;
+            const envName = document.getElementById('execute-env').value;
+            const command = document.getElementById('execute-command').value.trim();
+            
+            if (!username) {
+                showResult('execute-result', '请输入用户名', false);
+                return;
+            }
+            
+            if (!projectname) {
+                showResult('execute-result', '请选择项目', false);
+                return;
+            }
+            
+            if (!envName) {
+                showResult('execute-result', '请选择虚拟环境（必需）', false);
+                return;
+            }
+            
+            if (!command) {
+                showResult('execute-result', '请输入执行命令', false);
+                return;
+            }
+            
+            showResult('execute-result', '正在启动后台进程...', true);
+            
+            const outputDiv = document.getElementById('execute-output');
+            outputDiv.style.display = 'block';
+            outputDiv.innerHTML = '';
+            appendExecuteOutput(`[${new Date().toLocaleTimeString()}] 正在启动后台进程...`, 'info');
+            appendExecuteOutput(`项目: ${projectname} | 环境: ${envName} | 命令: ${command}`, 'info');
+            
+            try {
+                const response = await fetch('/project/execute/background', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        projectname: projectname,
+                        env_name: envName,
+                        command: command
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    appendExecuteOutput(`[${new Date().toLocaleTimeString()}] ✅ 后台进程已启动`, 'success');
+                    appendExecuteOutput(`进程ID (PID): ${data.pid}`, 'info');
+                    appendExecuteOutput(`日志文件: ${data.log_file}`, 'info');
+                    appendExecuteOutput(`项目路径: ${data.project_path}`, 'info');
+                    appendExecuteOutput(`环境路径: ${data.env_path}`, 'info');
+                    appendExecuteOutput('', 'info');
+                    appendExecuteOutput('提示：进程已在后台运行，可以通过进程ID管理该进程', 'info');
+                    appendExecuteOutput('日志输出已保存到上述日志文件中', 'info');
+                    
+                    showResult('execute-result', `✅ 后台进程已启动，进程ID: ${data.pid}`, true);
+                } else {
+                    appendExecuteOutput(`[${new Date().toLocaleTimeString()}] ❌ 启动失败`, 'error');
+                    appendExecuteOutput(`错误: ${data.error}`, 'error');
+                    showResult('execute-result', `❌ ${data.error}`, false);
+                }
+            } catch (error) {
+                appendExecuteOutput(`[${new Date().toLocaleTimeString()}] ❌ 请求失败`, 'error');
+                appendExecuteOutput(`错误: ${error.message}`, 'error');
+                showResult('execute-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
         // 当环境列表更新时，同步更新算法执行的环境选择
         function updateExecuteEnvSelect(envs) {
             const select = document.getElementById('execute-env');
@@ -1126,6 +1412,171 @@
                 option.textContent = env.name;
                 select.appendChild(option);
             });
+        }
+        
+        // 任务检查与复制
+        async function checkTaskAndCopy() {
+            const username = document.getElementById('task-username').value.trim();
+            const pid = document.getElementById('task-pid').value.trim();
+            const projectname = document.getElementById('task-projectname').value.trim();
+            const taskid = document.getElementById('task-taskid').value.trim();
+            const logFile = document.getElementById('task-log-file').value.trim();
+            
+            if (!username) {
+                showResult('task-result', '请输入用户名', false);
+                return;
+            }
+            
+            if (!pid) {
+                showResult('task-result', '请输入进程ID', false);
+                return;
+            }
+            
+            if (!projectname) {
+                showResult('task-result', '请输入算法项目名', false);
+                return;
+            }
+            
+            if (!taskid) {
+                showResult('task-result', '请输入任务ID', false);
+                return;
+            }
+            
+            showResult('task-result', '正在检查进程状态，请稍候...', true);
+            
+            try {
+                const requestBody = {
+                    pid: pid,
+                    username: username,
+                    projectname: projectname,
+                    taskid: taskid
+                };
+                
+                // 如果提供了日志文件路径，添加到请求中
+                if (logFile) {
+                    requestBody.log_file = logFile;
+                }
+                
+                const response = await fetch('/task/check_and_copy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let message = '';
+                    if (data.status === 'running') {
+                        message = `✅ 进程状态: 运行中\n` +
+                                 `进程ID: ${data.pid}\n` +
+                                 `用户名: ${data.username}\n` +
+                                 `项目名: ${data.projectname}\n` +
+                                 `任务ID: ${data.taskid}\n` +
+                                 `\n${data.message}`;
+                    } else if (data.status === 'completed') {
+                        message = `✅ 进程状态: 已完成\n` +
+                                 `进程ID: ${data.pid}\n` +
+                                 `用户名: ${data.username}\n` +
+                                 `项目名: ${data.projectname}\n` +
+                                 `任务ID: ${data.taskid}\n` +
+                                 `输出路径: ${data.output_path || 'N/A'}\n`;
+                        
+                        if (data.dir_exists) {
+                            message += `\n目录已存在，无需复制`;
+                        } else {
+                            message += `\n源路径: ${data.source_path || 'N/A'}\n` +
+                                      `目标路径: ${data.output_path || 'N/A'}\n` +
+                                      `\n${data.message || '复制完成'}`;
+                            if (data.copy_message) {
+                                message += `\n\n${data.copy_message}`;
+                            }
+                            // 显示日志文件复制信息
+                            if (data.log_file_copied) {
+                                message += `\n\n已复制日志文件:\n`;
+                                message += `文件名: ${data.log_file_copied.filename}\n`;
+                                message += `源路径: ${data.log_file_copied.source}\n`;
+                                message += `目标路径: ${data.log_file_copied.target}\n`;
+                            } else {
+                                message += `\n\n未找到或未复制日志文件`;
+                            }
+                        }
+                    }
+                    showResult('task-result', message, true);
+                } else {
+                    let errorMsg = `❌ 错误: ${data.error || '未知错误'}\n`;
+                    if (data.status) {
+                        errorMsg += `进程状态: ${data.status}\n`;
+                    }
+                    if (data.pid) {
+                        errorMsg += `进程ID: ${data.pid}\n`;
+                    }
+                    if (data.output_path) {
+                        errorMsg += `输出路径: ${data.output_path}\n`;
+                    }
+                    showResult('task-result', errorMsg, false);
+                }
+            } catch (error) {
+                showResult('task-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        function clearTaskResult() {
+            document.getElementById('task-result').style.display = 'none';
+            document.getElementById('task-result').innerHTML = '';
+        }
+        
+        // 文件内容读取
+        async function readFileContent() {
+            const server = document.getElementById('read-server').value;
+            const filePath = document.getElementById('read-file-path').value.trim();
+            
+            if (!filePath) {
+                showResult('read-file-result', '请输入文件路径', false);
+                return;
+            }
+            
+            showResult('read-file-result', '正在读取文件，请稍候...', true);
+            document.getElementById('file-content-display').style.display = 'none';
+            
+            try {
+                const response = await fetch('/file/read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        server: server,
+                        path: filePath
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('read-file-result', `✅ 文件读取成功: ${data.path}`, true);
+                    const contentDiv = document.getElementById('file-content-display');
+                    contentDiv.style.display = 'block';
+                    // 转义HTML特殊字符
+                    const escapedContent = data.content
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    contentDiv.innerHTML = escapedContent;
+                } else {
+                    showResult('read-file-result', `❌ ${data.error}`, false);
+                }
+            } catch (error) {
+                showResult('read-file-result', `请求失败: ${error.message}`, false);
+            }
+        }
+        
+        function clearFileContent() {
+            document.getElementById('read-file-result').style.display = 'none';
+            document.getElementById('file-content-display').style.display = 'none';
+            document.getElementById('file-content-display').innerHTML = '';
         }
         
         
