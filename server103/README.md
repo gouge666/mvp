@@ -30,7 +30,7 @@
 使用项目根目录下的 `requirements.txt` 安装依赖（推荐使用本地 pypiserver 源）：
 
 ```bash
-pip install -r requirements.txt --index-url http://192.168.10.2:8087/simple/ --trusted-host 192.168.10.2
+pip install -r requirements.txt --index-url http://192.168.140.202:8087/simple/ --trusted-host 192.168.140.202
 ```
 
 ## 运行服务

@@ -14,34 +14,34 @@
 
 ## 一、服务器与角色
 
-- **Server101（192.168.10.1，端口 5001） — 项目源服务器**
+- **Server101（192.168.140.201，端口 5001） — 项目源服务器**
   - 按用户组织的项目源代码与数据集：  
     `/home/user/{username}/projects/{projectname}/`
   - 是**唯一权威项目源**，所有执行前的项目都以这里为准。
 
-- **Server102（192.168.10.2，端口 5002） — 环境与执行服务器**
+- **Server102（192.168.140.202，端口 5002） — 环境与执行服务器**
   - 管理每个用户的虚拟环境：  
     `/home/user/{username}/envs/{env_name}/`
   - 执行算法时的实际运行目录：  
     `/home/user/{username}/projects/{projectname}/`（从 10.1 同步过来的副本）
   - 提供基础文件传输 API。
 
-- **Server103（192.168.10.3，端口 5003） — Web 管理与调度中心**
-  - 提供统一的 Web 管理界面：`http://192.168.10.3:5003/test`
+- **Server103（192.168.140.203，端口 5003） — Web 管理与调度中心**
+  - 提供统一的 Web 管理界面：`http://192.168.140.203:5003/test`
   - 对外暴露统一 API，内部调用 10.1 / 10.2 / 10.4：
     - 扫描 10.1 上的项目列表；
     - 在 10.2 上创建 / 列出 / 删除虚拟环境；
     - 调度算法执行（同步 / 异步）；
     - 把执行结果与日志归档到 10.4。
 
-- **Server104（192.168.10.4，端口 5004） — 结果与输出服务器**
+- **Server104（192.168.140.204，端口 5004） — 结果与输出服务器**
   - 按用户、按项目集中存放执行结果与日志：  
     `/home/user/{username}/outputs/{projectname}/...`
   - 也暴露与其他节点风格一致的传输 API。
 
 - **本地 PyPI 镜像（部署在 10.2）**
   - 监听端口：`8087`
-  - 访问地址（在服务器内网）：`http://192.168.10.2:8087/simple/`
+  - 访问地址（在服务器内网）：`http://192.168.140.202:8087/simple/`
   - 包文件目录（在本项目中）：`mypackages/packages/`
 
 SSH / Sudo 统一约定：
@@ -96,7 +96,7 @@ SSH / Sudo 统一约定：
 > 下述逻辑对应 `server103/app.py` 中 `/project/execute` 与 `/project/execute/async` 的最新实现。
 
 0. **初始化用户目录（推荐先做一次）**
-   - 在浏览器访问 `http://192.168.10.3:5003/test`；
+   - 在浏览器访问 `http://192.168.140.203:5003/test`；
    - 在“👤 用户初始化（在四台服务器创建目录）”区域输入 `username`，点击“创建用户基础目录”；  
    - 后端会在四台服务器上自动创建：  
      - 10.1：`/home/user/{username}`、`/home/user/{username}/projects`  
@@ -139,8 +139,8 @@ SSH / Sudo 统一约定：
         - 若存在 `requirements.txt`，则执行：
           ```bash
           pip install -r requirements.txt \
-            --index-url http://192.168.10.2:8087/simple/ \
-            --trusted-host 192.168.10.2
+            --index-url http://192.168.140.202:8087/simple/ \
+            --trusted-host 192.168.140.202
           ```
         - 执行用户命令 `command`，输出重定向到临时 log 文件。
      4. 执行完毕后，server103 会：
@@ -218,7 +218,7 @@ sudo nohup ./deploy.sh > deploy_run.log 2>&1 &
 4. 成功后，可通过：
 
 ```text
-http://192.168.10.2:8087/simple/
+http://192.168.140.202:8087/simple/
 ```
 
 作为 `pip` 的 `--index-url` 使用。
@@ -252,12 +252,12 @@ http://192.168.10.2:8087/simple/
      cd /home/user/common/localpythonmvp/server101
      python3 -m venv venv
      source venv/bin/activate
-     pip install -r requirements.txt --index-url http://192.168.10.2:8087/simple/ --trusted-host 192.168.10.2
+     pip install -r requirements.txt --index-url http://192.168.140.202:8087/simple/ --trusted-host 192.168.140.202
      
      cd /home/user/common/localpythonmvp/server102
      python3 -m venv venv
      source venv/bin/activate
-     pip install -r requirements.txt --index-url http://192.168.10.2:8087/simple/ --trusted-host 192.168.10.2
+     pip install -r requirements.txt --index-url http://192.168.140.202:8087/simple/ --trusted-host 192.168.140.202
      
      # server103 / server104 同理
      ```
@@ -269,19 +269,19 @@ http://192.168.10.2:8087/simple/
    # 假设当前在 10.3 的 /home/user/common/localpythonmvp 目录下
 
    # 分发 server101 代码 + venv 到 10.1
-   scp -r server101 user@192.168.10.1:/home/user/common/
+   scp -r server101 user@192.168.140.201:/home/user/common/
 
    # 分发 server102 代码 + venv 到 10.2
-   scp -r server102 user@192.168.10.2:/home/user/common/
+   scp -r server102 user@192.168.140.202:/home/user/common/
 
    # 分发 server103 代码 + venv 到 10.3（如果你先在别处准备好，再拷到正式目录）
-   scp -r server103 user@192.168.10.3:/home/user/common/
+   scp -r server103 user@192.168.140.203:/home/user/common/
 
    # 分发 server104 代码 + venv 到 10.4
-   scp -r server104 user@192.168.10.4:/home/user/common/
+   scp -r server104 user@192.168.140.204:/home/user/common/
 
    # 如需同步本地 PyPI 相关目录（mypackages），可以只放在 10.2：
-   scp -r mypackages user@192.168.10.2:/home/user/common/
+   scp -r mypackages user@192.168.140.202:/home/user/common/
    ```
 
    说明：
@@ -305,7 +305,7 @@ cd server104 && sudo nohup ./start.sh > start.log 2>&1 &
 然后在浏览器访问：
 
 ```text
-http://192.168.10.3:5003/test
+http://192.168.140.203:5003/test
 ```
 
 完成后续的环境、项目和执行操作。

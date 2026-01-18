@@ -10,7 +10,7 @@
    - 如果需要手工操作，可以在 10.3 上执行：  
      ```bash
      cd /home/user/common/localpythonmvp
-     scp -r mypackages user@192.168.10.2:/home/user/common/
+     scp -r mypackages user@192.168.140.202:/home/user/common/
      ```
    - 然后在 10.2 上：  
      ```bash
@@ -19,5 +19,5 @@
      ```
 
 3. **访问本地 pypiserver**
-   - 服务启动后，可通过 `http://192.168.10.2:8087` 访问本地 pypiserver，作为 `pip` 的镜像源地址；
+   - 服务启动后，可通过 `http://192.168.140.202:8087` 访问本地 pypiserver，作为 `pip` 的镜像源地址；
    - 如需添加其他包，可从其他镜像源网站（如 `https://pypi.tuna.tsinghua.edu.cn/simple/pillow/`）下载好对应 `whl` 或 `tar.gz` 包，上传到本项目的 `packages` 目录下即可。

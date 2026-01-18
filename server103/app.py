@@ -29,10 +29,10 @@ logger = logging.getLogger(__name__)
 
 # 服务器配置
 SERVER_CONFIG = {
-    'server101': {'host': '192.168.10.1', 'port': 22, 'user': 'user', 'password': '1234567'},
-    'server102': {'host': '192.168.10.2', 'port': 22, 'user': 'user', 'password': '1234567'},
-    'server103': {'host': '192.168.10.3', 'port': 22, 'user': 'user', 'password': '1234567'},
-    'server104': {'host': '192.168.10.4', 'port': 22, 'user': 'user', 'password': '1234567'},
+    'server101': {'host': '192.168.140.201', 'port': 22, 'user': 'user', 'password': '1234567'},
+    'server102': {'host': '192.168.140.202', 'port': 22, 'user': 'user', 'password': '1234567'},
+    'server103': {'host': '192.168.140.203', 'port': 22, 'user': 'user', 'password': '1234567'},
+    'server104': {'host': '192.168.140.204', 'port': 22, 'user': 'user', 'password': '1234567'},
 }
 
 # 当前服务器标识
@@ -2261,7 +2261,7 @@ def execute_project():
             temp_log = f'/tmp/run_{datetime.now().strftime("%Y%m%d_%H%M%S")}_{os.getpid()}.log'
             pip_cmd = (
                 f'if [ -f "requirements.txt" ]; then '
-                f'pip install -r requirements.txt --index-url http://192.168.10.2:8087/simple/ --trusted-host 192.168.10.2; '
+                f'pip install -r requirements.txt --index-url http://192.168.140.202:8087/simple/ --trusted-host 192.168.140.202; '
                 f'fi'
             )
             # 先用 sudo 修正输出目录权限（作用于项目目录下的 output）
@@ -2630,7 +2630,7 @@ cd "{project_path}"
 source "{env_path}/bin/activate"
 if [ -f "requirements.txt" ]; then
     echo "安装依赖..."
-    pip install -r requirements.txt --index-url http://192.168.10.2:8087/simple/ --trusted-host 192.168.10.2
+    pip install -r requirements.txt --index-url http://192.168.140.202:8087/simple/ --trusted-host 192.168.140.202
     echo ""
 fi
 echo "执行命令: {command}"
@@ -2909,7 +2909,7 @@ def execute_project_async():
                 temp_log = f'/tmp/run_{datetime.now().strftime("%Y%m%d_%H%M%S")}_{os.getpid()}.log'
                 pip_cmd = (
                     f'if [ -f "requirements.txt" ]; then '
-                    f'pip install -r requirements.txt --index-url http://192.168.10.2:8087/simple/ --trusted-host 192.168.10.2; '
+                    f'pip install -r requirements.txt --index-url http://192.168.140.202:8087/simple/ --trusted-host 192.168.140.202; '
                     f'fi'
                 )
                 # 先用 sudo 修正输出目录权限（作用于项目目录下的 output）
